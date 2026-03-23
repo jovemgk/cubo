@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cubo Mágico Branco (Sem Sombras)</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0a0a0a; /* Fundo escuro para contraste */ }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // 1. Configuração da Cena
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // --- Criando o Cubo Mágico ---
+        const magicCube = new THREE.Group();
+        scene.add(magicCube);
+
+        const size = 1; // tamanho de cada cubinho
+        const gap = 0.1; // espaço entre os cubos
+
+        // GEOMETRIA: Padrão
+        const smallGeometry = new THREE.BoxGeometry(size, size, size);
+
+        // --- MATERIAL CORRIGIDO: SEM SOMBRAS ---
+        // Usamos MeshBasicMaterial para cor sólida, ignorando luzes.
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff, // Branco absoluto
+        }); 
+
+        // BORDAS: Essenciais para definição contra o branco
+        // Elas criam o "espaço" visível entre as peças.
+        const edges = new THREE.EdgesGeometry(smallGeometry);
+        const lineMaterial = new THREE.LineBasicMaterial({ 
+            color: 0x000000, // Linhas pretas
+            linewidth: 1 // Linha fina para definição
+        });
+
+        for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+                for (let z = -1; z <= 1; z++) {
+                    const smallCube = new THREE.Mesh(smallGeometry, material);
+                    
+                    const wireframe = new THREE.LineSegments(edges, lineMaterial);
+                    smallCube.add(wireframe);
+
+                    // Posição com espaço
+                    smallCube.position.set(
+                        x * (size + gap), 
+                        y * (size + gap), 
+                        z * (size + gap)
+                    );
+                    
+                    magicCube.add(smallCube);
+                }
+            }
+        }
+        // --------------------------------------------------
+
+        // 3. Iluminação: NÃO NECESSÁRIA (Material Básico ignora luzes)
+        // scene.add(new THREE.AmbientLight(0xffffff, 1)); // Luz ambiente fraca opcional
+
+        camera.position.z = 10;
+        camera.position.y = 5; // Câmera mais alta para ver as divisões
+
+        // 4. Controles do Mouse
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // 5. Loop de Animação
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
